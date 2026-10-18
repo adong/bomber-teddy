@@ -1495,7 +1495,7 @@
 
   // ---------------------------------------------------------------- boot
   function boot() {
-    document.title = `${BT.TITLE.replace(/!$/, '')}: Teddy & Tommy`;
+    document.title = `${BT.TITLE} · Teddy & Tommy`;
     $('logoMain').innerHTML = BT.TITLE.replace(/TT/g, '<span class="tt">TT</span>');
     $('tagline').textContent = BT.SUBTITLE;
     resize();

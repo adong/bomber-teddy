@@ -3,7 +3,7 @@
   'use strict';
   const BT = (window.BT = window.BT || {});
 
-  // Working title. Alan names the games himself: change it here and the page title, logo and menus follow.
+  // Alan's name for it: change it here and the page title, logo and menus follow.
   BT.TITLE = 'BombasTTic!';
   BT.SUBTITLE = "Teddy & Tommy's confetti bomb maze";
 
