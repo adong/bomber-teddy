@@ -1017,7 +1017,7 @@
       document.querySelector('#foes .zomb').classList.toggle('zero', z === 0);
       document.querySelector('#foes .robo').classList.toggle('zero', r === 0);
       document.querySelector('#foes .robo').style.display = M.enemies.some((e) => e.kind === 'robot') ? '' : 'none';
-      $('foes').classList.toggle('clear', M.exitOpen);
+      $('foes').classList.toggle('clear', M.exitOpen && M.state === 'play');
       setText($('score'), 'score', `SCORE ${M.score.toLocaleString()}`);
     } else {
       const t = Math.max(0, Math.ceil(M.timeLeft));
@@ -1085,6 +1085,12 @@
     $('cpuToggle').style.display = mode === 'battle' ? '' : 'none';
     $('stagePick').style.display = mode === 'battle' ? 'none' : '';
     $('selTitle').textContent = mode === 'adventure' ? 'PICK YOUR HERO' : mode === 'coop' ? 'PICK YOUR TEAM' : 'WHO VS WHO?';
+    const k = (...keys) => keys.map((x) => `<kbd>${x}</kbd>`).join('');
+    $('selHint').innerHTML = mode === 'adventure'
+      ? `${k('A', 'D')} or ${k('←', '→')} hero · ${k('W', 'S')} stage · ${k('Enter')} go · ${k('Esc')} back`
+      : mode === 'coop'
+        ? `1P ${k('A', 'D')} · 2P ${k('←', '→')} · ${k('W', 'S')} stage · ${k('Enter')} go · ${k('Esc')} back`
+        : `1P ${k('A', 'D')} · 2P ${k('←', '→')} · ${k('C')} computer or player · ${k('Enter')} go · ${k('Esc')} back`;
     renderSelect();
     show('select');
   }
