@@ -3,6 +3,7 @@
 [![BombasTTic! title screen](docs/screenshot.jpg)](https://adong.github.io/bomber-teddy/)
 
 Press **?** any time (or tap the round **?** button on the left edge) to see the keys. The game waits while you look.
+Tap **中文 / EN** under it to switch between English and 中文 (the dashboard and every game remember the choice).
 
 A maze-and-bombs game starring Teddy and Tommy, built with Claude Code from plain JavaScript and Three.js on the shared Claude Games kit.
 You drop cartoon bombs to blast crates, find power-ups, pop the baddies and reach the exit.
@@ -14,7 +15,7 @@ The name lives in one place, `BT.TITLE` in `js/config.js`. Change it there and t
 ## Play
 
 - **Double-click `index.html`.** It works offline because Three.js and the kit are copied into `kit/`. Without internet the title font falls back to Arial Black.
-- **Send one file:** `dist/bomber-teddy.html` is the whole game in one file, about 820 KB. AirDrop or email it, then open it in a browser.
+- **Send one file:** `dist/bomber-teddy.html` is the whole game in one file, about 850 KB. AirDrop or email it, then open it in a browser.
 - Rebuild that file after any edit: `python3 kit/tools/bundle.py . --name bomber-teddy`
 
 Pick a mode and a difficulty on the title screen:
@@ -157,6 +158,8 @@ js/input.js       keyboard for two players, touch pads and buttons
 js/sfx.js         sounds on top of Kit.sound
 js/art.js         arenas for each theme, crates, bombs, power-ups, the exit, effects
 js/game.js        scene, camera, characters and poses, effects, the companion's visits, HUD, menus, loop, window.game
+js/keys.js        the keys the ? panel shows (Kit.help)
+js/zh.js          中文: every word on the page, the toasts and banners, the ? panel, and OOPS! / POP! / SWISH! (Kit.lang)
 tools/check.js    runs js/check.js in Node
 kit/              copy of ~/claude-games/kit (python3 ../kit/tools/sync.py .), never edited here
 dist/bomber-teddy.html   the single-page build

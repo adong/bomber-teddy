@@ -98,6 +98,7 @@
   #foes .robo img { background: radial-gradient(circle at 50% 35%, #ffd8a8, #c96a10); }
   #foes span.zero { opacity: 0.4; }
   #foes.clear span { display: none; }
+  html.lang-zh #foes.clear::after { content: '⭐ 快找出口！'; }
   #foes.clear::after { content: '⭐ FIND THE EXIT!'; font-family: var(--display); font-size: 14px; color: var(--yellow); -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; animation: pulse 0.8s ease-in-out infinite; }
   #timer {
     font-family: var(--display); font-size: 26px; line-height: 1; color: var(--yellow); padding: 6px 12px; border-radius: 14px;
@@ -363,7 +364,7 @@
 </div>
 
 <div id="title" class="screen">
-  <div class="logo"><span class="l1">TEDDY &amp; TOMMY</span><span class="l2" id="logoMain"></span></div>
+  <div class="logo" data-no-lang><span class="l1">TEDDY &amp; TOMMY</span><span class="l2" id="logoMain"></span></div>
   <p class="tag" id="tagline"></p>
   <div class="modes">
     <button id="modeAdv" class="btn pulse" data-mode="adventure">🎈 ADVENTURE<small>1 player · 12 stages</small></button>
@@ -441,6 +442,7 @@
 <script src="kit/roster.js"></script>
 <script src="kit/portraits.js"></script>
 <script src="kit/sound.js"></script>
+<script src="kit/lang.js"></script>
 <script src="kit/help.js"></script>
 <script src="js/config.js"></script>
 <script src="js/levels.js"></script>
@@ -452,5 +454,6 @@
 <script src="js/art.js"></script>
 <script src="js/game.js"></script>
 <script src="js/keys.js"></script>
+<script src="js/zh.js"></script>
 </body>
 </html>

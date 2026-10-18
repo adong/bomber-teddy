@@ -635,7 +635,9 @@
   }
 
   // Comic words (OOPS!, SWISH!, POP!) on a starburst.
-  function wordTexture(word, fill, burst) {
+  // The word is drawn in the current language (Kit.lang.t), and cached per language.
+  function wordTexture(en, fill, burst) {
+    const word = Kit.lang ? Kit.lang.t(en) : en;
     return once(`word-${word}-${fill}-${burst}`, () => {
       const [c, g] = gfx.makeCanvas(320, 160);
       if (burst) {

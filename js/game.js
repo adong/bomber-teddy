@@ -151,6 +151,10 @@
     for (const v of cast.players) {
       releaseModel(v.m);
       dropTreat(v);
+      // the old dizzy stars and OOPS! burst go too (a stage left mid-OOPS would otherwise leave it floating)
+      scene.remove(v.stars, v.oops.s);
+      v.stars.children.forEach((st) => st.material.dispose());
+      v.oops.s.material.dispose();
     }
     for (const v of cast.enemies.values()) releaseModel(v.m);
     for (const v of cast.buddies) releaseModel(v.m);
@@ -176,6 +180,7 @@
       v.bubble.visible = false;
       v.bubble.position.y = 1.1;
       m.root.add(v.bubble);
+      m.extras.push(v.bubble); // pooled models drop it again on release
       v.stars = A.dizzyStars();
       scene.add(v.stars);
       v.oops = { s: A.wordSprite('OOPS!', '#ffd400', '#ff6a8a'), t: 9 };
@@ -203,9 +208,7 @@
       m.extras.push(tag);
       cast.buddies.push({ m, entry, scale: s, ang: Math.PI, ph: 0, shown: 0, cheerT: 0, ball: null, shot: false, mode: '', modeT: 0, leaving: 0 });
     });
-    for (const v of cast.players) disposeStars(v);
   }
-  function disposeStars() { /* stars sprites are reused per player; nothing to free */ }
 
   // Ease the extra channels the kit's pose() doesn't touch back to standing.
   function settle(m, k) {
@@ -1478,6 +1481,16 @@
         again();
       } else if (k === 'Escape') titleScreen();
     }
+  }
+
+  // Switching language mid-game: redraw the OOPS! bursts already made (other words are drawn fresh each time).
+  if (Kit.lang) {
+    Kit.lang.onChange(() => {
+      for (const v of cast.players) {
+        v.oops.s.material.map = A.wordTexture('OOPS!', '#ffd400', '#ff6a8a');
+        v.oops.s.material.needsUpdate = true;
+      }
+    });
   }
 
   // ---------------------------------------------------------------- boot
