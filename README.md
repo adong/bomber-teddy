@@ -1,5 +1,7 @@
 # BombasTTic! (working title)
 
+[![BombasTTic! title screen](docs/screenshot.jpg)](https://adong.github.io/bomber-teddy/)
+
 A maze-and-bombs game starring Teddy and Tommy, built with Claude Code from plain JavaScript and Three.js on the shared Claude Games kit.
 You drop cartoon bombs to blast crates, find power-ups, pop the baddies and reach the exit.
 There are no image, model or audio files: the boys, zombies and robots are the kit's blocky characters, every texture is painted on a canvas, and every sound is synthesised.
