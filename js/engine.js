@@ -244,7 +244,7 @@
     else if (key === 'fire') p.range = Math.min(TUNE.maxRange, p.range + 1);
     else if (key === 'speed') p.speedUps = Math.min(TUNE.maxSpeedUps, p.speedUps + 1);
     else if (key === 'kick') p.kick = true;
-    else if (key === 'heart') M.hearts = Math.min(TUNE.maxHearts, M.hearts + 1);
+    else if (key === 'heart') M.hearts = Math.max(M.hearts, Math.min(TUNE.maxHearts, M.hearts + 1));
     M.score += 50;
     emit(M, 'pickup', { who: p, item: type, c });
   }
@@ -642,9 +642,13 @@
   function chooseDir(M, e) {
     const x = Math.round(e.x), y = Math.round(e.y);
     const D = e.kind === 'robot' ? danger(M) : null;
-    const okCell = (nx, ny) => passEnemy(M, e, nx, ny) && (!D || D[idx(nx, ny)] > 0.7);
+    // baddies back away from anyone blinking (just popped back at the start, or just saved by his brother)
+    const blinking = M.players.filter((p) => p.state === 'play' && p.safe > 0);
+    const near = (nx, ny) => blinking.some((p) => Math.abs(p.x - nx) + Math.abs(p.y - ny) < 2.6);
+    const okCell = (nx, ny) => passEnemy(M, e, nx, ny) && (!D || D[idx(nx, ny)] > 0.7) && !near(nx, ny);
     let opts = [];
     for (let d = 0; d < 4; d++) if (okCell(x + DIRS[d][0], y + DIRS[d][1])) opts.push(d);
+    if (!opts.length) for (let d = 0; d < 4; d++) if (passEnemy(M, e, x + DIRS[d][0], y + DIRS[d][1]) && (!D || D[idx(x + DIRS[d][0], y + DIRS[d][1])] > 0.7)) opts.push(d);
     if (!opts.length && D) for (let d = 0; d < 4; d++) if (passEnemy(M, e, x + DIRS[d][0], y + DIRS[d][1])) opts.push(d);
     if (!opts.length) {
       e.moving = false;

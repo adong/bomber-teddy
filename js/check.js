@@ -143,7 +143,8 @@
     for (const n of stages) {
       const seed = ((opts.seed || 1) * 7919 + n * 104729) >>> 0;
       const M = BT.Engine.create({ mode, diff, n, seed, heroes, cpu: heroes.map(() => true), stats, hearts: 99 });
-      const r = { stage: n + 1, name: M.L.name, result: 'timeout', time: 0, caught: 0, saves: 0, pops: 0, buddyPops: 0, bombs: 0, buddyBombs: 0 };
+      const r = { stage: n + 1, name: M.L.name, result: 'timeout', time: 0, caught: 0, saves: 0, pops: 0, buddyPops: 0, bombs: 0, buddyBombs: 0, spawnTrap: 0 };
+      const respawnAt = [];
       let nextBuddy = opts.buddyEvery || 0;
       const dt = BT.Engine.DT;
       while (M.state === 'play' && M.time < limit) {
@@ -153,7 +154,13 @@
         }
         M.step(dt, []);
         for (const ev of M.events) {
-          if (ev.type === 'caught') r.caught++;
+          if (ev.type === 'caught') {
+            r.caught++;
+            // caught again near the start within 4 s of popping back there: the spawn was trapped
+            const p = ev.who;
+            if (respawnAt[p.i] !== undefined && M.time - respawnAt[p.i] < 4 && Math.abs(p.x - p.sx) + Math.abs(p.y - p.sy) <= 3) r.spawnTrap++;
+          }
+          if (ev.type === 'respawn') respawnAt[ev.who.i] = M.time;
           if (ev.type === 'saved') r.saves++;
           if (ev.type === 'pop') {
             r.pops++;
@@ -174,5 +181,31 @@
     return { diff, mode, cleared, of: results.length, results };
   }
 
-  BT.Check = { checkLevel, checkAll, sabotage, soak, SAFE_WALK };
+  // Computer vs computer battle rounds: every round must end (last one standing, a draw, or the clock).
+  function battleSoak(rounds = 40, diff = 'normal') {
+    const out = { rounds, ko: 0, draw: 0, time: 0, wins: [0, 0], longest: 0, buddyVisits: 0, saves: 0, stuck: 0 };
+    for (let k = 0; k < rounds; k++) {
+      const M = BT.Engine.create({ mode: 'battle', diff, n: k % BT.Levels.ARENAS.length, seed: (k * 7919 + 17) >>> 0, heroes: ['teddy', 'tommy'], cpu: [true, true] });
+      M.players.forEach((p) => (p.level = diff));
+      while (M.state === 'play' && M.time < TUNE.battle.roundTime + 5) {
+        M.step(BT.Engine.DT, []);
+        for (const ev of M.events) {
+          if (ev.type === 'buddyIn') out.buddyVisits++;
+          if (ev.type === 'saved') out.saves++;
+        }
+        M.events.length = 0;
+      }
+      if (M.state !== 'roundEnd') out.stuck++;
+      else if (M.reason === 'time') out.time++;
+      else if (M.winner < 0) out.draw++;
+      else {
+        out.ko++;
+        out.wins[M.winner]++;
+      }
+      out.longest = Math.max(out.longest, Math.round(M.time));
+    }
+    return out;
+  }
+
+  BT.Check = { checkLevel, checkAll, sabotage, soak, battleSoak, SAFE_WALK };
 })();

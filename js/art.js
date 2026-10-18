@@ -191,6 +191,28 @@
     });
   }
 
+  // space-base pillar tops: a panel with a glowing ring light
+  function spaceTopTexture(th) {
+    return once('spaceTop', () => {
+      const [c, g] = gfx.makeCanvas(128, 128);
+      g.fillStyle = th.pillarTop;
+      g.fillRect(0, 0, 128, 128);
+      g.strokeStyle = gfx.shade(th.pillar, -0.25);
+      g.lineWidth = 6;
+      g.strokeRect(10, 10, 108, 108);
+      g.strokeStyle = '#5ef2ff';
+      g.lineWidth = 10;
+      g.beginPath();
+      g.arc(64, 64, 30, 0, Math.PI * 2);
+      g.stroke();
+      g.fillStyle = '#d4fbff';
+      g.beginPath();
+      g.arc(64, 64, 12, 0, Math.PI * 2);
+      g.fill();
+      return gfx.toTexture(c);
+    });
+  }
+
   // toy-room pillars are alphabet blocks; the letters spell the boys' names
   const LETTERS = 'TEDDYTOMMYABC';
   const LETTER_COLORS = ['#ff4b5c', '#3d8bff', '#ffd400', '#2fc27a', '#b45cff', '#ff8a1f'];
@@ -314,7 +336,8 @@
     disposables.push(ground.geometry, ground.material);
 
     // border walls and pillars (instanced: they never change)
-    const wallM = [gfx.std('#ffffff', { map: wallTexture(th) }), gfx.std(th.wallTop)];
+    // hedges and snow walls wear their texture on top too; the others get a plain cap colour
+    const wallM = [gfx.std('#ffffff', { map: wallTexture(th) }), th.id === 'yard' || th.id === 'snow' ? gfx.std(th.id === 'yard' ? '#cfe8c0' : '#ffffff', { map: wallTexture(th) }) : gfx.std(th.wallTop)];
     const wallMats = [wallM[0], wallM[0], wallM[1], wallM[0], wallM[0], wallM[0]];
     const border = [], pillars = [];
     for (let y = 0; y < H; y++) {
@@ -342,7 +365,9 @@
       });
     } else {
       const pm = gfx.std('#ffffff', { map: pillarTexture(th), roughness: th.id === 'snow' ? 0.25 : 0.8, metalness: th.id === 'space' ? 0.35 : 0 });
-      const top = gfx.std(th.pillarTop, { roughness: th.id === 'snow' ? 0.2 : 0.8 });
+      const top = th.id === 'space'
+        ? gfx.std('#ffffff', { map: spaceTopTexture(th), emissive: '#ffffff', emissiveMap: spaceTopTexture(th), emissiveIntensity: 0.35, roughness: 0.5 })
+        : gfx.std(th.pillarTop, { roughness: th.id === 'snow' ? 0.2 : 0.8 });
       const inst = new T.InstancedMesh(pillarGeo, [pm, pm, top, pm, pm, pm], pillars.length);
       pillars.forEach(([x, y], k) => inst.setMatrixAt(k, m4.makeTranslation(wx(x), 0.85, wz(y))));
       inst.castShadow = inst.receiveShadow = true;
@@ -811,9 +836,31 @@
   // Faint red crosses under ticking bombs (Easy only), so little ones see where the blast will go.
   function DangerFloor(scene) {
     const meshes = [];
+    const tex = once('dangerTile', () => {
+      const [c, g] = gfx.makeCanvas(64, 64);
+      g.fillStyle = 'rgba(255,61,90,0.55)';
+      gfx.roundRect(g, 3, 3, 58, 58, 12);
+      g.fill();
+      g.save();
+      g.clip();
+      g.strokeStyle = 'rgba(255,255,255,0.55)';
+      g.lineWidth = 7;
+      for (let k = -64; k < 128; k += 20) {
+        g.beginPath();
+        g.moveTo(k, 0);
+        g.lineTo(k + 64, 64);
+        g.stroke();
+      }
+      g.restore();
+      g.strokeStyle = 'rgba(255,40,70,0.95)';
+      g.lineWidth = 4;
+      gfx.roundRect(g, 3, 3, 58, 58, 12);
+      g.stroke();
+      return gfx.toTexture(c);
+    });
     const geoP = new T.PlaneGeometry(TILE * 0.9, TILE * 0.9);
     for (let k = 0; k < 160; k++) {
-      const m = new T.Mesh(geoP, new T.MeshBasicMaterial({ color: '#ff3d5a', transparent: true, opacity: 0.22, depthWrite: false }));
+      const m = new T.Mesh(geoP, new T.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.5, depthWrite: false }));
       m.rotation.x = -Math.PI / 2;
       m.visible = false;
       m.renderOrder = 1;
@@ -832,7 +879,7 @@
               const m = meshes[k++];
               m.visible = true;
               m.position.set(wx(c % W), 0.045, wz((c / W) | 0));
-              m.material.opacity = 0.16 + (1 - b.fuse / b.fuseMax) * 0.22 + Math.sin(t * 10) * 0.04;
+              m.material.opacity = 0.45 + (1 - b.fuse / b.fuseMax) * 0.4 + Math.sin(t * 10) * 0.08;
             }
           }
         }

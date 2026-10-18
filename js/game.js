@@ -832,11 +832,13 @@
   function fitArena() {
     const w = innerWidth || 800, h = innerHeight || 600;
     const top = 1 - (2 * Math.min(110, h * 0.2)) / h;
+    // tablets: keep the bottom row clear of the thumb pads (phones follow the players instead)
+    const bottom = -0.97 + (G.touch && h >= 500 ? (2 * 110) / h : 0);
     const fits = (d, tz) => {
       placeCam(d, 0, tz);
       for (const c of corners) {
         tmpV.copy(c).project(camera);
-        if (Math.abs(tmpV.x) > 0.97 || tmpV.y > top || tmpV.y < -0.97) return false;
+        if (Math.abs(tmpV.x) > 0.97 || tmpV.y > top || tmpV.y < bottom) return false;
       }
       return true;
     };
@@ -852,7 +854,7 @@
       if (hi < best.d) best = { d: hi, tz };
     }
     // on small screens, don't let tiles get tiny: get closer and follow the players instead
-    const minTile = Math.min(w, h) < 500 ? 34 : 0;
+    const minTile = Math.min(w, h) < 500 ? 40 : 0;
     const dMax = minTile ? (TILE * h) / (2 * Math.tan((FOV * Math.PI) / 360) * minTile) : Infinity;
     return { d: best.d, tz: best.tz, dMax, follow: best.d > dMax };
   }
@@ -867,7 +869,9 @@
       const fz0 = live.reduce((s, p) => s + wz(p.y), 0) / live.length;
       const visW = d * Math.tan((FOV * Math.PI) / 360) * camera.aspect;
       const visD = (d * Math.tan((FOV * Math.PI) / 360)) / Math.sin(TILT);
-      const mx = Math.max(0, (W * TILE) / 2 + 1 - visW * 0.9), mz = Math.max(0, (H * TILE) / 2 + 1 - visD * 0.8);
+      // on touch screens the camera may scroll a little past the edge, so nobody hides under the thumb pads
+      const over = G.touch ? 4 : 0;
+      const mx = Math.max(0, (W * TILE) / 2 + 1 - visW * 0.9) + over, mz = Math.max(0, (H * TILE) / 2 + 1 - visD * 0.8) + over * 0.75;
       tx = clamp(fx0, -mx, mx);
       tz = clamp(fz0, -mz, mz);
     }
@@ -878,7 +882,7 @@
         const u = Math.min(1, M.stateT / 1.2);
         d += (Math.min(d, 15) - d) * u;
         tx += (wx(p.x) - tx) * u;
-        tz += (wz(p.y) + 1 - tz) * u;
+        tz += (wz(p.y) - 2.2 - tz) * u; // the winner sits low in the frame, under the banner
       }
     }
     if (G.camOverride) {
@@ -1412,6 +1416,7 @@
 
   function setTouch(on) {
     G.touch = on;
+    G.camFit = null;
     document.body.classList.toggle('touch', on);
   }
 
@@ -1565,6 +1570,16 @@
     // pop every baddie (to test the exit)
     clearEnemies() {
       for (const e of G.M.enemies) if (e.state === 'walk') G.M.enemies.find((q) => q === e) && Object.assign(e, { state: 'pop', st: 0 });
+      return this.step(0.1);
+    },
+    // finish the stage: pop the baddies, uncover the exit and put player i on it
+    win(i = 0) {
+      const M = G.M;
+      for (const e of M.enemies) if (e.state === 'walk') Object.assign(e, { state: 'pop', st: 0 });
+      M.cells[M.exit] = 0;
+      M.exitShown = true;
+      this.step(0.1);
+      Object.assign(M.players[i], { x: M.exit % W, y: (M.exit / W) | 0, safe: 0 });
       return this.step(0.1);
     },
     check: (seeds = 50) => BT.Check.checkAll({ seeds }),

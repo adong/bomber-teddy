@@ -20,8 +20,8 @@
     },
     {
       id: 'snow', name: 'SNOW PARK', sky: '#bfe3ff', ground: '#f4f8ff',
-      floorA: '#f3f8ff', floorB: '#e3eefb', wall: '#ffffff', wallTop: '#ffffff',
-      pillar: '#a6dcff', pillarTop: '#e8f7ff', crate: '#ff5a6e', crateLine: '#c93a4f', crateMark: '#ffd400',
+      floorA: '#e6f0fc', floorB: '#d5e5f7', wall: '#ffffff', wallTop: '#ffffff',
+      pillar: '#7cc4f5', pillarTop: '#d6f0ff', crate: '#ff5a6e', crateLine: '#c93a4f', crateMark: '#ffd400',
     },
     {
       id: 'space', name: 'SPACE BASE', sky: '#151834', ground: '#22264a',

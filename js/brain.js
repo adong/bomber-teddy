@@ -124,7 +124,9 @@
     if (!path) path = E.pathTo(M, p, safeGoal((c) => M.items[c] > 0), 10, ok);
     if (!path && !M.battle && M.exitOpen && M.exitShown) path = E.pathTo(M, p, (c) => c === M.exit, 40, ok);
     if (!path && targets.length) path = E.pathTo(M, p, safeGoal((c) => c !== me && E.inLine(M, c % W, (c / W) | 0, p.range, (q) => tcells.has(q))), 16, ok);
-    if (!path) path = E.pathTo(M, p, safeGoal((c) => DIRS.some(([dx, dy]) => M.cells[c + dx + dy * W] === CRATE)), 30, ok);
+    // a crate to blast, from a spot whose blast won't catch your brother
+    const spares = (c) => !friends.length || !E.bombCells(M, { x: c % W, y: (c / W) | 0, range: p.range }).some((q) => friends.includes(q));
+    if (!path) path = E.pathTo(M, p, safeGoal((c) => DIRS.some(([dx, dy]) => M.cells[c + dx + dy * W] === CRATE) && spares(c)), 30, ok);
     if (!path && M.battle && targets.length) path = E.pathTo(M, p, safeGoal((c) => tcells.has(c)), 30, ok);
     if (!path) path = randomStep(M, p, ok);
     B.path = path || [];
