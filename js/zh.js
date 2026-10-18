@@ -10,6 +10,7 @@
   const TREAT = { 'ICE CREAM': '冰淇淋', WATER: '水', 'JUICE BOX': '果汁', COOKIE: '饼干', WATERMELON: '西瓜', BANANA: '香蕉' };
   const KEY = { T: 'T', Enter: '回车' };
 
+  L.add({ zombies: '僵尸', robots: '机器人' }); // the foe counters' pictures (aria-label: Kit.lang translates it, not alt)
   L.add({
     // title screen
     "Teddy & Tommy's confetti bomb maze": 'Teddy 和 Tommy 的彩纸炸弹迷宫',

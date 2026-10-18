@@ -370,7 +370,7 @@
     <div class="mid">
       <div id="stageName">BACKYARD 1-1</div>
       <div id="hearts"></div>
-      <div id="foes"><span class="zomb"><img id="zImg" alt="zombies">×<b id="zN">0</b></span><span class="robo"><img id="rImg" alt="robots">×<b id="rN">0</b></span></div>
+      <div id="foes"><span class="zomb"><img id="zImg" aria-label="zombies">×<b id="zN">0</b></span><span class="robo"><img id="rImg" aria-label="robots">×<b id="rN">0</b></span></div>
       <div id="timer">2:00</div>
       <div id="score">0</div>
       <div class="ibtns">
@@ -6132,6 +6132,7 @@ Kit.help.setup({
   const TREAT = { 'ICE CREAM': '冰淇淋', WATER: '水', 'JUICE BOX': '果汁', COOKIE: '饼干', WATERMELON: '西瓜', BANANA: '香蕉' };
   const KEY = { T: 'T', Enter: '回车' };
 
+  L.add({ zombies: '僵尸', robots: '机器人' }); // the foe counters' pictures (aria-label: Kit.lang translates it, not alt)
   L.add({
     // title screen
     "Teddy & Tommy's confetti bomb maze": 'Teddy 和 Tommy 的彩纸炸弹迷宫',
