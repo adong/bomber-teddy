@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3d9cf0">
+<title>Teddy &amp; Tommy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #ffd400;
+    --pink: #ff3d7f;
+    --cyan: #18d4ff;
+    --blue: #3d8bff;
+    --red: #ff4b5c;
+    --green: #2fc27a;
+    --ink: #14121f;
+    --display: 'Bungee', 'Arial Black', Impact, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #8fd0ff; color: #fff;
+    font-family: 'Rubik', system-ui, -apple-system, sans-serif;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 62%, rgba(10, 8, 30, 0.3) 100%); }
+  .hidden { opacity: 0 !important; pointer-events: none !important; visibility: hidden; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  .bars {
+    position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: flex-start; gap: 10px;
+    padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+  }
+  .pb { flex: 1; display: flex; gap: 9px; align-items: flex-start; min-width: 0; }
+  .pb.right { flex-direction: row-reverse; }
+  .face {
+    flex: none; width: 60px; height: 60px; border-radius: 16px; overflow: hidden; border: 3px solid #fff;
+    background: radial-gradient(circle at 50% 35%, #a5dcff, #2a7bd6); box-shadow: 0 4px 0 var(--ink);
+  }
+  .right .face { background: radial-gradient(circle at 50% 35%, #ffc0c8, #d6334a); }
+  .face img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.15) translateY(4%); }
+  .pb.out .face img { filter: grayscale(1); opacity: 0.6; }
+  .col { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .right .col { align-items: flex-end; }
+  .row { display: flex; align-items: center; gap: 7px; }
+  .right .row { flex-direction: row-reverse; }
+  .nm { font-family: var(--display); font-size: 19px; line-height: 1; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 2px 0 var(--ink); }
+  .who { font: 800 11px/1 'Rubik', sans-serif; letter-spacing: 1px; padding: 3px 7px; border-radius: 999px; background: var(--blue); border: 2px solid #fff; }
+  .right .who { background: var(--red); }
+  .wins { display: none; gap: 4px; }
+  .battle .wins { display: flex; }
+  .wins i { width: 20px; height: 20px; display: grid; place-items: center; font-style: normal; font-size: 14px; border-radius: 50%; background: rgba(20, 18, 31, 0.5); border: 2px solid rgba(255, 255, 255, 0.7); }
+  .wins i.on { background: var(--yellow); border-color: var(--ink); box-shadow: 0 0 10px rgba(255, 212, 0, 0.9); }
+  .wins i.on::after { content: '★'; color: var(--ink); }
+  .pw { display: flex; gap: 4px; }
+  .pw span {
+    display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px 2px 4px; border-radius: 9px; font-size: 15px; line-height: 1;
+    background: rgba(20, 18, 31, 0.55); border: 2px solid rgba(255, 255, 255, 0.6);
+  }
+  .pw b { font: 800 13px/1 'Rubik', sans-serif; min-width: 8px; text-align: center; }
+  .pw span.off { opacity: 0.35; filter: grayscale(1); }
+  .pw span.bump { animation: bump 0.5s ease-out; }
+  @keyframes bump { 30% { transform: scale(1.4); background: var(--yellow); color: var(--ink); } }
+  /* the companion: his face, how long he's staying (or resting), his shield, and the key that calls him */
+  .bud { display: flex; align-items: center; gap: 5px; width: 170px; max-width: 100%; }
+  .right .bud { flex-direction: row-reverse; }
+  .bud img { width: 26px; height: 26px; border-radius: 8px; border: 2px solid #fff; background: radial-gradient(circle at 50% 35%, #ffe2a0, #ff9f1c); object-fit: cover; }
+  .bud i { position: relative; flex: 1; height: 10px; border-radius: 5px; background: rgba(20, 18, 31, 0.6); border: 2px solid rgba(255, 255, 255, 0.7); overflow: hidden; --fill: 0; }
+  .bud i::after { content: ''; position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--fill)); background: linear-gradient(90deg, #9dff6a, #3fc22b); }
+  .right .bud i::after { transform-origin: right; }
+  .bud em { font-style: normal; font-size: 15px; opacity: 0.25; filter: grayscale(1); }
+  .bud.shield em { opacity: 1; filter: none; animation: pulse 0.8s ease-in-out infinite; }
+  .bud .k { font: 800 10px/1 'Rubik', sans-serif; padding: 3px 5px; border-radius: 5px; background: #fff; color: var(--ink); }
+  .bud.on img { border-color: var(--yellow); box-shadow: 0 0 10px rgba(255, 212, 0, 0.95); }
+  .bud.rest img { filter: grayscale(1); }
+  .bud.rest i::after { background: rgba(255, 255, 255, 0.55); }
+  .no { animation: nope 0.3s linear; }
+  @keyframes nope { 25% { translate: -5px 0; } 75% { translate: 5px 0; } }
+  .touch .bud .k { display: none; }
+  .mid { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 150px; }
+  #stageName {
+    font-family: var(--display); font-size: 15px; letter-spacing: 1px; padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+    background: rgba(20, 18, 31, 0.6); border: 2px solid rgba(255, 255, 255, 0.75);
+  }
+  #hearts { font-size: 20px; line-height: 1; letter-spacing: -2px; min-height: 20px; filter: drop-shadow(0 2px 0 var(--ink)); }
+  #hearts .lost { opacity: 0.25; filter: grayscale(1); }
+  #hearts.hit { animation: nope 0.4s linear; }
+  #foes { display: flex; gap: 8px; }
+  #foes span { display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px 2px 2px; border-radius: 999px; background: rgba(20, 18, 31, 0.55); border: 2px solid rgba(255, 255, 255, 0.6); font: 800 15px/1 'Rubik', sans-serif; }
+  #foes img { width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #9be37a, #233b2a); }
+  #foes .robo img { background: radial-gradient(circle at 50% 35%, #ffd8a8, #c96a10); }
+  #foes span.zero { opacity: 0.4; }
+  #foes.clear span { display: none; }
+  #foes.clear::after { content: '⭐ FIND THE EXIT!'; font-family: var(--display); font-size: 14px; color: var(--yellow); -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; animation: pulse 0.8s ease-in-out infinite; }
+  #timer {
+    font-family: var(--display); font-size: 26px; line-height: 1; color: var(--yellow); padding: 6px 12px; border-radius: 14px;
+    background: rgba(20, 18, 31, 0.7); border: 3px solid #fff; box-shadow: 0 4px 0 var(--ink); font-variant-numeric: tabular-nums;
+  }
+  #timer.low { color: #ff6a5a; animation: pulse 0.6s ease-in-out infinite; }
+  #score { font: 800 13px/1 'Rubik', sans-serif; letter-spacing: 1px; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+  .battle #hearts, .battle #foes, .battle #score { display: none; }
+  #timer { display: none; }
+  .battle #timer { display: block; }
+  .ibtns { display: flex; gap: 6px; pointer-events: auto; }
+  .ibtn {
+    width: 34px; height: 34px; border-radius: 10px; font-size: 15px; line-height: 1;
+    background: rgba(20, 18, 31, 0.5); border: 2px solid rgba(255, 255, 255, 0.75); display: grid; place-items: center;
+  }
+  #toasts { position: absolute; left: 0; right: 0; top: 34%; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  .toast {
+    font-family: var(--display); font-size: clamp(18px, 3.4vw, 30px); color: #fff; padding: 4px 16px; border-radius: 16px; text-align: center;
+    -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink);
+    background: rgba(20, 18, 31, 0.35); animation: toast 1.6s ease-out forwards;
+  }
+  .toast.good { color: var(--yellow); }
+  .toast.save { color: var(--cyan); font-size: clamp(22px, 4.4vw, 40px); }
+  .toast.oops { color: #ff8a8a; }
+  @keyframes toast {
+    0% { opacity: 0; transform: scale(1.8); }
+    10% { opacity: 1; transform: scale(0.95); }
+    18%, 78% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: translateY(-24px); }
+  }
+  .banner {
+    position: absolute; left: 0; right: 0; top: 36%; text-align: center; font-family: var(--display); opacity: 0;
+    font-size: clamp(44px, 10vw, 110px); line-height: 1; color: var(--yellow); padding: 0 12px;
+    -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill;
+    text-shadow: 0 7px 0 var(--pink), 0 12px 0 var(--ink), 0 20px 30px rgba(0, 0, 0, 0.35);
+    transition: opacity 0.25s;
+  }
+  .banner small { display: block; font-size: 0.32em; margin-top: 10px; color: #fff; -webkit-text-stroke: 2px var(--ink); text-shadow: 0 4px 0 var(--ink); }
+  .banner.show { opacity: 1; animation: slam 0.45s cubic-bezier(.2, 1.6, .4, 1); }
+  .banner.cool { color: #fff; text-shadow: 0 6px 0 var(--blue), 0 11px 0 var(--ink); }
+  .banner.win { color: var(--cyan); top: 20%; text-shadow: 0 6px 0 var(--yellow), 0 11px 0 var(--ink); }
+  @keyframes slam { from { transform: scale(2.4) rotate(-8deg); opacity: 0; } }
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+
+  /* ---------- the companion buttons: big, with his face; the ring shows how long he's staying ---------- */
+  .budbtn {
+    position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); width: 96px; height: 96px; padding: 0; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; pointer-events: auto; --fill: 1;
+    background: conic-gradient(var(--yellow) calc(var(--fill) * 360deg), rgba(20, 18, 31, 0.6) 0); border: 4px solid #fff; box-shadow: 0 6px 0 var(--ink);
+  }
+  .budbtn img { width: 74px; height: 74px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #ffe2a0, #ff9f1c); object-fit: cover; }
+  .budbtn small { position: absolute; bottom: 5px; left: 0; right: 0; font: 800 10px/1 'Rubik', sans-serif; letter-spacing: 1px; text-shadow: 0 1px 2px var(--ink), 0 0 4px var(--ink); }
+  .budbtn kbd { position: absolute; top: 6px; right: 10px; min-width: 18px; height: 18px; font-size: 10px; }
+  .touch .budbtn kbd { display: none; }
+  .budbtn.on { background: conic-gradient(#7dff5a calc(var(--fill) * 360deg), rgba(20, 18, 31, 0.6) 0); border-color: var(--yellow); box-shadow: 0 6px 0 var(--ink), 0 0 24px rgba(255, 212, 0, 0.95); }
+  .budbtn.rest img { filter: grayscale(1) brightness(0.8); }
+  .budbtn.down { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
+  #bud0 { right: max(18px, env(safe-area-inset-right)); }
+  #bud1 { right: max(18px, env(safe-area-inset-right)); display: none; }
+  .two #bud0 { right: auto; left: max(18px, env(safe-area-inset-left)); }
+  .two #bud1 { display: flex; }
+  .touch #bud0 { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 112px); }
+  .touch.two #bud0 { left: calc(max(18px, env(safe-area-inset-left)) + 168px); bottom: calc(max(18px, env(safe-area-inset-bottom)) + 108px); }
+  .touch.two #bud1 { right: calc(max(18px, env(safe-area-inset-right)) + 168px); bottom: calc(max(18px, env(safe-area-inset-bottom)) + 108px); }
+
+  /* ---------- touch controls ---------- */
+  #touch { position: fixed; inset: 0; pointer-events: none; display: none; }
+  .touch #touch { display: block; }
+  .pad {
+    position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); width: 156px; height: 156px; border-radius: 50%; pointer-events: auto; touch-action: none;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3), rgba(20, 18, 31, 0.45)); border: 4px solid rgba(255, 255, 255, 0.85);
+  }
+  #pad0 { left: max(18px, env(safe-area-inset-left)); }
+  #pad1 { right: max(18px, env(safe-area-inset-right)); display: none; }
+  .two #pad1 { display: block; }
+  .pad .ar { position: absolute; font-size: 24px; opacity: 0.85; text-shadow: 0 2px 0 var(--ink); }
+  .pad .u { top: 6px; left: 50%; translate: -50% 0; }
+  .pad .d { bottom: 6px; left: 50%; translate: -50% 0; }
+  .pad .l { left: 10px; top: 50%; translate: 0 -50%; }
+  .pad .r { right: 10px; top: 50%; translate: 0 -50%; }
+  .pad .knob { position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px; border-radius: 50%; background: var(--yellow); border: 3px solid var(--ink); box-shadow: 0 4px 0 var(--ink); transition: transform 0.06s; }
+  #pad1 .knob { background: #ffb0b0; }
+  .pad[data-dir="left"] .knob { transform: translateX(-38px); }
+  .pad[data-dir="right"] .knob { transform: translateX(38px); }
+  .pad[data-dir="up"] .knob { transform: translateY(-38px); }
+  .pad[data-dir="down"] .knob { transform: translateY(38px); }
+  .bombbtn {
+    position: absolute; bottom: max(18px, env(safe-area-inset-bottom)); width: 96px; height: 96px; border-radius: 50%; pointer-events: auto; touch-action: none;
+    font-size: 40px; line-height: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    background: linear-gradient(160deg, #ff8a5a, var(--red)); border: 4px solid #fff; box-shadow: 0 6px 0 var(--ink);
+  }
+  .bombbtn small { font: 800 10px/1 'Rubik', sans-serif; letter-spacing: 1px; }
+  .bombbtn.down { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); filter: brightness(1.15); }
+  #bomb0 { right: max(18px, env(safe-area-inset-right)); }
+  #bomb1 { display: none; }
+  .two #bomb0 { right: auto; left: calc(max(18px, env(safe-area-inset-left)) + 168px); }
+  .two #bomb1 { display: flex; right: calc(max(18px, env(safe-area-inset-right)) + 168px); background: linear-gradient(160deg, #7cd0ff, #2a7bd6); }
+  @media (max-height: 460px) {
+    .pad { width: 128px; height: 128px; }
+    .pad .knob { width: 50px; height: 50px; margin: -25px; }
+    .bombbtn, .budbtn { width: 80px; height: 80px; }
+    .budbtn img { width: 60px; height: 60px; }
+    .touch #bud0 { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 94px); }
+    .two #bomb0, .touch.two #bud0 { left: calc(max(18px, env(safe-area-inset-left)) + 138px); }
+    .two #bomb1, .touch.two #bud1 { right: calc(max(18px, env(safe-area-inset-right)) + 138px); }
+    .touch.two #bud0, .touch.two #bud1 { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 92px); }
+    .face { width: 46px; height: 46px; border-radius: 12px; }
+    .nm { font-size: 15px; }
+    .bud { width: 130px; }
+    .pw span { font-size: 13px; }
+    #stageName { font-size: 12px; }
+  }
+
+  /* ---------- screens ---------- */
+  .screen {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+    gap: clamp(8px, 1.8vh, 16px); padding: 16px; text-align: center; transition: opacity 0.3s;
+    background: linear-gradient(180deg, rgba(20, 18, 40, 0.12), rgba(20, 18, 40, 0.62));
+    overflow-y: auto; justify-content: safe center;
+  }
+  .logo { transform: rotate(-4deg); line-height: 0.9; margin-bottom: 2px; }
+  .logo span { display: block; font-family: var(--display); -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; }
+  .logo .l1 { color: #fff; font-size: clamp(20px, min(4.6vw, 5vh), 44px); text-shadow: 0 5px 0 var(--blue), 0 9px 0 var(--ink); }
+  .logo .l2 { color: var(--yellow); font-size: clamp(40px, min(10vw, 11vh), 104px); text-shadow: 0 6px 0 var(--pink), 0 11px 0 var(--ink), 0 18px 30px rgba(0, 0, 0, 0.35); }
+  .logo .tt { display: inline; color: var(--cyan); text-shadow: 0 6px 0 var(--yellow), 0 11px 0 var(--ink); }
+  .tag { font-size: clamp(15px, 2.3vw, 20px); font-weight: 700; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+  .btn {
+    font-family: var(--display); font-size: clamp(18px, 3.2vw, 26px); color: var(--ink);
+    background: var(--yellow); border: 4px solid var(--ink); border-radius: 20px; padding: 11px 24px;
+    box-shadow: 0 8px 0 var(--ink), 0 14px 30px rgba(0, 0, 0, 0.3); transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active, .btn.down { transform: translateY(6px); box-shadow: 0 2px 0 var(--ink); }
+  .btn.alt { background: var(--cyan); }
+  .btn.pink { background: #ff8fb8; }
+  .btn.ghost { background: #fff; }
+  .btn.small { font-size: clamp(15px, 2.4vw, 19px); padding: 8px 18px; border-radius: 16px; box-shadow: 0 6px 0 var(--ink); }
+  .btn small { display: block; font: 800 11px/1.2 'Rubik', sans-serif; letter-spacing: 0.5px; margin-top: 3px; }
+  .btn.focus { outline: 4px solid #fff; outline-offset: 3px; }
+  .modes { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .pulse { animation: pulse 1.3s ease-in-out infinite; }
+  .levels { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .lvl {
+    display: flex; align-items: center; gap: 8px; padding: 7px 14px 7px 10px; border-radius: 14px; text-align: left;
+    background: rgba(20, 18, 31, 0.55); border: 3px solid rgba(255, 255, 255, 0.7); transition: transform 0.12s;
+  }
+  .lvl .e { font-size: 26px; }
+  .lvl b { display: block; font-family: var(--display); font-size: 16px; font-weight: 400; }
+  .lvl small { font-size: 11px; font-weight: 700; opacity: 0.85; }
+  .lvl[aria-checked="true"] { background: rgba(255, 212, 0, 0.3); border-color: var(--yellow); transform: scale(1.05); box-shadow: 0 0 0 3px var(--ink); }
+  .keys {
+    display: grid; grid-template-columns: auto auto auto; gap: 4px 16px; align-items: center; text-align: left;
+    padding: 10px 16px; border-radius: 16px; background: rgba(20, 18, 31, 0.6); border: 2px solid rgba(255, 255, 255, 0.6);
+    font-size: 13px; font-weight: 700;
+  }
+  .keys .h { font-family: var(--display); font-size: 13px; font-weight: 400; letter-spacing: 1px; }
+  .keys .h.p1 { color: #8cc2ff; }
+  .keys .h.p2 { color: #ffb0b0; }
+  kbd {
+    display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; margin: 1px;
+    font: 700 12px/1 system-ui, sans-serif; color: var(--ink); background: #fff; border-radius: 6px; box-shadow: 0 2px 0 #9aa;
+  }
+  .touch-hint { display: none; font-weight: 700; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); max-width: 560px; }
+  .touch .keys { display: none; }
+  .touch .touch-hint { display: block; }
+  .credit { position: fixed; right: max(14px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); font-size: 13px; font-weight: 700; opacity: 0.85; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); pointer-events: none; }
+  .credit b { color: #ffe2a0; }
+
+  /* ---------- pick your heroes ---------- */
+  .seltitle { font-family: var(--display); font-size: clamp(24px, 4.6vw, 42px); color: var(--yellow); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); }
+  .slots { display: flex; align-items: center; gap: clamp(10px, 3vw, 30px); }
+  .slot {
+    position: relative; width: clamp(150px, 24vw, 210px); padding: 14px 10px 12px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: linear-gradient(180deg, rgba(61, 139, 255, 0.55), rgba(20, 18, 31, 0.7)); border: 4px solid #8cc2ff;
+  }
+  #slot1 { background: linear-gradient(180deg, rgba(255, 75, 92, 0.55), rgba(20, 18, 31, 0.7)); border-color: #ffb0b0; }
+  .slot .who { position: absolute; top: -12px; left: 50%; translate: -50% 0; }
+  #slot1 .who { background: var(--red); }
+  .slot .pick { display: flex; align-items: center; gap: 4px; }
+  .slot .pick img { width: clamp(84px, 13vw, 120px); aspect-ratio: 1; border-radius: 16px; background: radial-gradient(circle at 50% 35%, #a5dcff, #2a7bd6); }
+  #slot1 .pick img { background: radial-gradient(circle at 50% 35%, #ffc0c8, #d6334a); }
+  .arrow { width: 36px; height: 48px; border-radius: 12px; font-size: 20px; background: rgba(255, 255, 255, 0.92); color: var(--ink); box-shadow: 0 4px 0 var(--ink); }
+  .arrow:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  .slot .nm { font-size: clamp(20px, 3vw, 26px); }
+  .slot .pal { display: flex; align-items: center; gap: 4px; padding: 2px 9px 2px 2px; border-radius: 999px; background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--ink); font: 800 10px/1.1 'Rubik', sans-serif; text-align: left; }
+  .slot .pal img { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #ffe2a0, #ff9f1c); }
+  .slot .pal b { display: block; font-family: var(--display); font-weight: 400; font-size: 13px; }
+  .cpu-toggle { padding: 5px 10px; border-radius: 12px; font: 800 12px/1.1 'Rubik', sans-serif; background: rgba(20, 18, 31, 0.6); border: 2px solid rgba(255, 255, 255, 0.8); }
+  .cpu-toggle.on { background: var(--yellow); color: var(--ink); border-color: var(--ink); }
+  .vs { font-family: var(--display); font-size: clamp(30px, 6vw, 60px); color: #fff; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--pink), 0 9px 0 var(--ink); }
+  .stagepick { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 18px; padding: 6px 10px; border-radius: 16px; background: rgba(20, 18, 31, 0.55); border: 2px solid rgba(255, 255, 255, 0.7); }
+  .stagepick .arrow { width: 34px; height: 34px; }
+  #stageLabel { min-width: 190px; }
+  #stageLabel small { display: block; font: 800 11px/1.2 'Rubik', sans-serif; opacity: 0.85; }
+  .selbtns { display: flex; gap: 14px; }
+  .hint { font-size: 13px; font-weight: 700; opacity: 0.85; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); }
+
+  /* ---------- pause / results ---------- */
+  .big {
+    font-family: var(--display); font-size: clamp(44px, 9vw, 100px); color: var(--cyan); transform: rotate(-4deg);
+    -webkit-text-stroke: 4px var(--ink); paint-order: stroke fill; text-shadow: 0 7px 0 var(--yellow), 0 12px 0 var(--ink);
+  }
+  #resFace { width: clamp(100px, 19vh, 160px); aspect-ratio: 1; border-radius: 24px; border: 4px solid #fff; background: radial-gradient(circle at 50% 35%, #fff3a0, #ffb02e); box-shadow: 0 6px 0 var(--ink); animation: pulse 1.2s ease-in-out infinite; }
+  #resTitle { color: var(--yellow); }
+  .stats { padding: 10px 18px; border-radius: 16px; background: rgba(20, 18, 31, 0.65); border: 2px solid rgba(255, 255, 255, 0.7); font-size: 14px; font-weight: 700; display: flex; flex-direction: column; gap: 4px; }
+  .stats:empty { display: none; }
+  .stats b { font-family: var(--display); font-weight: 400; color: var(--yellow); margin-right: 6px; }
+  .btnrow { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; background: #3d9cf0; font-family: var(--display); font-size: 28px; letter-spacing: 2px; padding: 24px; text-align: center; }
+  .rotate { display: none; position: fixed; left: 50%; bottom: 14px; translate: -50% 0; padding: 8px 14px; border-radius: 999px; background: rgba(20, 18, 31, 0.75); font-weight: 800; font-size: 13px; pointer-events: none; white-space: nowrap; }
+  @media (orientation: portrait) and (max-width: 700px) { .rotate { display: block; } }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div class="vignette"></div>
+
+<div id="hud" class="hidden">
+  <div class="bars">
+    <div class="pb" id="pb0">
+      <div class="face"><img alt=""></div>
+      <div class="col">
+        <div class="row"><span class="nm">TEDDY</span><span class="who">1P</span><span class="wins"><i></i><i></i></span></div>
+        <div class="pw"><span data-k="bomb" title="bombs">💣<b>1</b></span><span data-k="fire" title="blast size">🔥<b>2</b></span><span data-k="speed" title="speed">👟<b>0</b></span><span data-k="kick" class="off" title="bomb kick">🦶</span></div>
+        <div class="bud"><img alt=""><i></i><em title="his shield">🛡️</em><span class="k">T</span></div>
+      </div>
+    </div>
+    <div class="mid">
+      <div id="stageName">BACKYARD 1-1</div>
+      <div id="hearts"></div>
+      <div id="foes"><span class="zomb"><img id="zImg" alt="zombies">×<b id="zN">0</b></span><span class="robo"><img id="rImg" alt="robots">×<b id="rN">0</b></span></div>
+      <div id="timer">2:00</div>
+      <div id="score">0</div>
+      <div class="ibtns">
+        <button id="pauseBtn" class="ibtn" title="Pause (P)">❚❚</button>
+        <button class="ibtn muteBtn" title="Sound (M)">🔊</button>
+      </div>
+    </div>
+    <div class="pb right" id="pb1">
+      <div class="face"><img alt=""></div>
+      <div class="col">
+        <div class="row"><span class="nm">TOMMY</span><span class="who">2P</span><span class="wins"><i></i><i></i></span></div>
+        <div class="pw"><span data-k="bomb">💣<b>1</b></span><span data-k="fire">🔥<b>2</b></span><span data-k="speed">👟<b>0</b></span><span data-k="kick" class="off">🦶</span></div>
+        <div class="bud"><img alt=""><i></i><em>🛡️</em><span class="k">Enter</span></div>
+      </div>
+    </div>
+  </div>
+  <div id="toasts"></div>
+  <div id="banner" class="banner"></div>
+  <button id="bud0" class="budbtn" data-i="0"><img alt=""><small>TOMMY</small><kbd>T</kbd></button>
+  <button id="bud1" class="budbtn" data-i="1"><img alt=""><small>TEDDY</small><kbd>⏎</kbd></button>
+</div>
+
+<div id="touch">
+  <div id="pad0" class="pad" data-dir=""><span class="ar u">▲</span><span class="ar d">▼</span><span class="ar l">◀</span><span class="ar r">▶</span><i class="knob"></i></div>
+  <button id="bomb0" class="bombbtn">💣<small>BOMB</small></button>
+  <div id="pad1" class="pad" data-dir=""><span class="ar u">▲</span><span class="ar d">▼</span><span class="ar l">◀</span><span class="ar r">▶</span><i class="knob"></i></div>
+  <button id="bomb1" class="bombbtn">💣<small>BOMB</small></button>
+</div>
+
+<div id="title" class="screen">
+  <div class="logo"><span class="l1">TEDDY &amp; TOMMY</span><span class="l2" id="logoMain"></span></div>
+  <p class="tag" id="tagline"></p>
+  <div class="modes">
+    <button id="modeAdv" class="btn pulse" data-mode="adventure">🎈 ADVENTURE<small>1 player · 12 stages</small></button>
+    <button id="modeCoop" class="btn alt" data-mode="coop">👫 TEAM UP<small>2 players, one adventure</small></button>
+    <button id="modeBattle" class="btn pink" data-mode="battle">🥊 BATTLE<small>Teddy vs Tommy · best of 3</small></button>
+  </div>
+  <div class="levels" role="radiogroup" aria-label="Difficulty">
+    <button class="lvl" data-level="easy" role="radio"><span class="e">🐣</span><span><b>EASY</b><small>for little bombers</small></span></button>
+    <button class="lvl" data-level="normal" role="radio"><span class="e">🔥</span><span><b>NORMAL</b><small>for big kids</small></span></button>
+  </div>
+  <div class="keys">
+    <span></span><span class="h p1">PLAYER 1</span><span class="h p2">PLAYER 2</span>
+    <span>move</span><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span>
+    <span>drop a bomb</span><span><kbd>Space</kbd> <kbd>F</kbd></span><span><kbd>L</kbd></span>
+    <span>call your brother</span><span><kbd>T</kbd></span><span><kbd>Enter</kbd></span>
+    <span>pause · sound</span><span><kbd>P</kbd> <kbd>M</kbd></span><span></span>
+  </div>
+  <p class="touch-hint">Thumb on the pad to walk, 💣 to drop a bomb, and tap your brother's face to call him in. Two players can share an iPad: each gets a pad and a bomb button.</p>
+  <div class="credit">built with <b>Claude Code</b></div>
+</div>
+
+<div id="select" class="screen hidden">
+  <div id="selTitle" class="seltitle">PICK YOUR HERO</div>
+  <div class="slots">
+    <div class="slot" id="slot0">
+      <span class="who">1P</span>
+      <div class="pick"><button class="arrow" data-d="-1">◀</button><img alt=""><button class="arrow" data-d="1">▶</button></div>
+      <span class="nm"></span>
+      <span class="pal"><img alt=""><span>+ buddy<b></b></span></span>
+    </div>
+    <div class="vs" id="selVs">&amp;</div>
+    <div class="slot" id="slot1">
+      <span class="who">2P</span>
+      <div class="pick"><button class="arrow" data-d="-1">◀</button><img alt=""><button class="arrow" data-d="1">▶</button></div>
+      <span class="nm"></span>
+      <span class="pal"><img alt=""><span>+ buddy<b></b></span></span>
+      <button class="cpu-toggle" id="cpuToggle">👤 PLAYER 2</button>
+    </div>
+  </div>
+  <div class="stagepick" id="stagePick"><button class="arrow" data-s="-1">◀</button><span id="stageLabel"></span><button class="arrow" data-s="1">▶</button></div>
+  <div class="selbtns">
+    <button id="selBack" class="btn small ghost">◀ BACK</button>
+    <button id="selGo" class="btn small pulse">LET'S GO!</button>
+  </div>
+  <p class="hint" id="selHint">1P <kbd>A</kbd><kbd>D</kbd> · 2P <kbd>←</kbd><kbd>→</kbd> · <kbd>W</kbd><kbd>S</kbd> stage · <kbd>Enter</kbd> go · <kbd>Esc</kbd> back</p>
+</div>
+
+<div id="pause" class="screen hidden">
+  <div class="big">PAUSED</div>
+  <div class="btnrow">
+    <button id="resumeBtn" class="btn">▶ RESUME</button>
+    <button id="quitBtn" class="btn small ghost">MENU</button>
+  </div>
+  <p class="hint">P · Esc · Space to resume · Q for the menu · M sound</p>
+</div>
+
+<div id="results" class="screen hidden">
+  <img id="resFace" alt="">
+  <div id="resTitle" class="big">TEDDY WINS!</div>
+  <p id="resSub" class="tag"></p>
+  <div id="resStats" class="stats"></div>
+  <div class="btnrow">
+    <button id="againBtn" class="btn">↻ AGAIN</button>
+    <button id="menuBtn" class="btn ghost small">MENU</button>
+  </div>
+  <p class="hint" id="resHint">Enter again · Esc menu</p>
+</div>
+
+<div id="loading">LOADING…</div>
+<div class="rotate">↻ Turn sideways for a bigger arena!</div>
+
+<script src="kit/three.min.js"></script>
+<script src="kit/gfx.js"></script>
+<script src="kit/people.js"></script>
+<script src="kit/roster.js"></script>
+<script src="kit/portraits.js"></script>
+<script src="kit/sound.js"></script>
+<script src="js/config.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/brain.js"></script>
+<script src="js/check.js"></script>
+<script src="js/input.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/art.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
